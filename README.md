@@ -76,6 +76,31 @@ You can leave both in — only the relevant pair will actually fire, so there's 
 
 ---
 
+---
+
+## Networked Version (Photon PUN 2)
+
+If you're using **Photon PUN 2** and want other players in the lobby to see a player stick to a wall and jump off in real time, use `WallStick_PUN2.cs` instead of the base script.
+
+### How it works
+- Your player prefab needs a **PhotonView** component (standard for any PUN 2 networked player).
+- Only the **owning client** (`photonView.IsMine`) reads trigger input and touches physics — this prevents every client from fighting over control of the same Rigidbody.
+- When the local player sticks or unsticks, it fires a **PunRPC** (`RPC_SetStuck`) to every other client so they know this player is now stuck.
+- **Position syncing** (so other players actually see them stop moving mid-air) is handled by whatever transform sync component you're already using for player movement — typically **PhotonTransformView** on the same prefab. As long as that's already set up for your player, freezing the Rigidbody locally will naturally stop position updates from being sent, and other clients will see the player stop in place.
+- Remote clients don't run physics for other players' Rigidbodies — the RPC is there so you can hook up **animations, particle effects, or sound** to make it visually obvious to everyone that a player is stuck (see the commented-out example lines inside `RPC_SetStuck`).
+
+### Setup differences from the base script
+1. Use `WallStick_PUN2.cs` instead of `WallStick.cs`.
+2. Make sure your player prefab has:
+   - A **PhotonView**
+   - A **PhotonTransformView** (or your project's equivalent) already syncing position/rotation
+3. Everything else (Stick tag/layer, trigger input axis) is set up exactly the same way as the base script.
+
+### Note on remote Rigidbodies
+Most PUN 2 player setups make the Rigidbody **kinematic** on non-owned/remote copies of the player, since position is driven by the transform sync component instead of physics. If that's how your project is set up, you don't need to do anything extra — the remote copy will just stop moving because its synced position stopped updating. If your project handles remote players differently, let me know your setup and the script can be adjusted.
+
+---
+
 ## Credit
 
 This script was made by **DecoyVR**. Please don't take credit for it if you share or repost it.
